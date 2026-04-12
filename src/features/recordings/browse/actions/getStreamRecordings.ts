@@ -47,9 +47,21 @@ export async function getStreamRecordings({
     .sort((one, two) => (one > two ? -1 : 1))
     .slice(startIndex, endIndex)
 
-  const recordingsWithTime: StreamRecording[] = await Promise.all(
+  const recordingsWithTime = await Promise.all(
     recordingFiles.map(async (r) => {
-      const stat = fs.statSync(path.join(streamDir, r))
+      const recordingPath = path.resolve(streamDir, r)
+      if (
+        recordingPath !== streamDir &&
+        !recordingPath.startsWith(streamDir + path.sep)
+      ) {
+        logger.warn('Rejected invalid recording path traversal attempt', {
+          streamName,
+          recordingFileName: r,
+        })
+        return null
+      }
+
+      const stat = fs.statSync(recordingPath)
       return {
         name: r,
         createdAt: stat.mtime,
@@ -62,5 +74,7 @@ export async function getStreamRecordings({
     }),
   )
 
-  return recordingsWithTime
+  return recordingsWithTime.filter(
+    (recording): recording is StreamRecording => recording !== null,
+  )
 }
