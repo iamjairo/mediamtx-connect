@@ -25,20 +25,31 @@ export async function getStreamRecordings({
   if (!config) {
     return []
   }
+
+  const recordingsRoot = path.resolve(config.recordingsDirectory)
+  const streamDir = path.resolve(recordingsRoot, streamName)
+  if (
+    streamDir !== recordingsRoot &&
+    !streamDir.startsWith(recordingsRoot + path.sep)
+  ) {
+    logger.warn('Rejected invalid streamName path traversal attempt', {
+      streamName,
+    })
+    return []
+  }
+
   const startIndex = (page - 1) * +take
   const endIndex = startIndex + +take
 
   const recordingFiles = fs
-    .readdirSync(path.join(config.recordingsDirectory, streamName))
+    .readdirSync(streamDir)
     .filter(f => !f.startsWith('.'))
     .sort((one, two) => (one > two ? -1 : 1))
     .slice(startIndex, endIndex)
 
   const recordingsWithTime: StreamRecording[] = await Promise.all(
     recordingFiles.map(async (r) => {
-      const stat = fs.statSync(
-        path.join(config.recordingsDirectory, streamName, r),
-      )
+      const stat = fs.statSync(path.join(streamDir, r))
       return {
         name: r,
         createdAt: stat.mtime,
