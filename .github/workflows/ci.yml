@@ -53,13 +53,14 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
+      - name: Setup test data directories
+        run: npm run setup:test-data
       - name: Start MediaMTX with fake streams
         run: ./scripts/start-mediamtx.sh
-      - name: Setup database and test data
+      - name: Setup database
         run: |
           npm run migrate
           npm run db:seed
-          npm run setup:test-data
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
       - name: Build application
