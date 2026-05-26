@@ -24,6 +24,9 @@ export default antfu(
       // Auto-generated files
       'src/lib/MediaMTX/generated.ts',
       'src/lib/prisma/migrations/**',
+      // Subprojects with their own tsconfig + lint setup
+      'mcp-server/**',
+      'packages/**',
     ],
   },
   {
