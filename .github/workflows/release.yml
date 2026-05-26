@@ -1,0 +1,161 @@
+# Multi-arch release workflow — Phase 4.
+#
+# Triggers on tags matching `v*`. Builds and publishes:
+#   - Docker images for the dashboard + MCP server on linux/amd64 + linux/arm64,
+#     pushed to ghcr.io/iamjairo/*.
+#   - Tauri bundles for both desktop apps (dashboard + MCP tray) on
+#     linux x64+arm64, macOS universal, Windows x64+arm64, attached to a
+#     GitHub Release.
+#
+# No code signing in this phase (personal use). Auto-update manifests for
+# the Tauri apps land in milestone PR 5 of Phase 4.
+
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  docker:
+    name: Docker images (${{ matrix.image.name }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - name: dashboard
+            context: packages/dashboard-vite
+            target_name: mediamtx-dashboard
+          - name: mcp-server
+            context: mcp-server
+            target_name: mediamtx-mcp
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract version
+        id: version
+        run: echo "version=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.image.context }}
+          file: ${{ matrix.image.context }}/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ghcr.io/iamjairo/${{ matrix.image.target_name }}:latest
+            ghcr.io/iamjairo/${{ matrix.image.target_name }}:${{ steps.version.outputs.version }}
+
+  tauri:
+    name: ${{ matrix.app.name }} (${{ matrix.platform.os }} / ${{ matrix.platform.arch }})
+    runs-on: ${{ matrix.platform.runs-on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        app:
+          - {name: desktop, dir: apps/desktop}
+          - {name: mcp-tray, dir: apps/mcp-tray}
+        platform:
+          - {os: linux, arch: x64, runs-on: ubuntu-22.04, target: x86_64-unknown-linux-gnu}
+          - {os: linux, arch: arm64, runs-on: ubuntu-22.04, target: aarch64-unknown-linux-gnu}
+          - {os: macos, arch: universal, runs-on: macos-14, target: universal-apple-darwin}
+          - {os: windows, arch: x64, runs-on: windows-2022, target: x86_64-pc-windows-msvc}
+          - {os: windows, arch: arm64, runs-on: windows-2022, target: aarch64-pc-windows-msvc}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform.target }}
+
+      - name: Linux build deps
+        if: matrix.platform.os == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libsoup-3.0-dev \
+            libjavascriptcoregtk-4.1-dev \
+            build-essential \
+            curl \
+            wget \
+            libssl-dev \
+            libgtk-3-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev
+
+      - name: Cross-compile setup (linux arm64)
+        if: matrix.platform.os == 'linux' && matrix.platform.arch == 'arm64'
+        run: |
+          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+          # TODO: cross-arch sysroot for webkit deps — likely needs a custom container.
+          echo "Note: linux/arm64 Tauri builds may require a dedicated builder image."
+
+      - name: Bundle MCP server into mcp-tray resources
+        if: matrix.app.name == 'mcp-tray'
+        shell: bash
+        run: |
+          set -e
+          cd mcp-server
+          npm install --no-audit --no-fund
+          npm run build
+          mkdir -p ../apps/mcp-tray/src-tauri/resources/mcp-server
+          cp -r dist node_modules package.json ../apps/mcp-tray/src-tauri/resources/mcp-server/
+
+      - name: Install app deps
+        shell: bash
+        run: |
+          cd ${{ matrix.app.dir }}
+          npm install --no-audit --no-fund
+
+      - name: Build Tauri bundle
+        shell: bash
+        env:
+          # Empty until code signing lands (personal use).
+          APPLE_SIGNING_IDENTITY: ''
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          cd ${{ matrix.app.dir }}
+          npm run tauri -- build --target ${{ matrix.platform.target }}
+
+      - name: Collect artifacts
+        shell: bash
+        run: |
+          mkdir -p release-out
+          find ${{ matrix.app.dir }}/src-tauri/target/${{ matrix.platform.target }}/release/bundle \
+            -type f \( -name '*.dmg' -o -name '*.AppImage' -o -name '*.deb' -o -name '*.rpm' -o -name '*.msi' -o -name '*.exe' -o -name '*.app.tar.gz' \) \
+            -exec cp -v {} release-out/ \;
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-out/*
+          fail_on_unmatched_files: false
+          generate_release_notes: true
