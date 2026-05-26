@@ -1,0 +1,32 @@
+{
+  "name": "@iamjairo/mediamtx-mcp",
+  "version": "0.1.0",
+  "description": "Model Context Protocol server for MediaMTX. Exposes the v3 REST API as MCP tools, resources and prompts.",
+  "license": "MIT",
+  "bin": {
+    "mediamtx-mcp": "./dist/index.js"
+  },
+  "main": "dist/index.js",
+  "type": "module",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
