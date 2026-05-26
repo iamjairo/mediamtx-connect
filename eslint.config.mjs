@@ -24,6 +24,8 @@ export default antfu(
       // Auto-generated files
       'src/lib/MediaMTX/generated.ts',
       'src/lib/prisma/migrations/**',
+      // MCP server has its own tsconfig + build; root lint shouldn't scan it
+      'mcp-server/**',
     ],
   },
   {

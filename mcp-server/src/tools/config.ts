@@ -1,8 +1,8 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 
-import { z } from 'zod'
-
 import type { Api, GlobalConf, PathConf } from '../mediamtx/generated.js'
+
+import { z } from 'zod'
 
 import { callOrFail, callVoidOrFail, errorResult } from './util.js'
 
