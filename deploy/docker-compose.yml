@@ -1,0 +1,77 @@
+# Combined deployment: three independent artifacts composed together.
+#
+#   - mediamtx        : the upstream MediaMTX media server (official image)
+#   - dashboard       : the Vite SPA, served via nginx (this repo)
+#   - mcp-server      : the MediaMTX MCP server (this repo)
+#
+# Usage:
+#   cd deploy
+#   docker compose up -d
+#
+# The dashboard is at http://localhost:8080
+# MediaMTX API is at http://localhost:9997
+# The MCP server runs in HTTP mode (TODO) or stdio (default) — stdio is for
+# desktop / CLI clients, so by default mcp-server is built but not started
+# as a long-running service. Override via `docker compose --profile mcp up`.
+
+services:
+  mediamtx:
+    image: bluenviron/mediamtx:1.11.3
+    container_name: mmtx-mediamtx
+    restart: unless-stopped
+    networks: [mediamtx-net]
+    volumes:
+      - ./mediamtx.yml:/mediamtx.yml:ro
+      - mediamtx-recordings:/recordings
+    ports:
+      - '8554:8554'      # RTSP
+      - '1935:1935'      # RTMP
+      - '8888:8888'      # HLS
+      - '8889:8889'      # WebRTC HTTP
+      - '8189:8189/udp'  # WebRTC ICE/UDP
+      - '8890:8890/udp'  # SRT
+      - '9997:9997'      # API
+
+  dashboard:
+    build:
+      context: ../packages/dashboard-vite
+      dockerfile: Dockerfile
+    image: ghcr.io/iamjairo/mediamtx-dashboard:latest
+    container_name: mmtx-dashboard
+    restart: unless-stopped
+    networks: [mediamtx-net]
+    depends_on: [mediamtx]
+    ports:
+      - '8080:80'
+    environment:
+      # MediaMTX URL the BROWSER will hit — must be reachable from the user's
+      # browser, not from inside the dashboard container. Default assumes
+      # everything on localhost. Override for remote deployments.
+      MEDIAMTX_URL: http://localhost:9997
+      ALLOW_DESTRUCTIVE: 'true'
+      POLL_INTERVAL_MS: '5000'
+
+  mcp-server:
+    build:
+      context: ../mcp-server
+      dockerfile: Dockerfile
+    image: ghcr.io/iamjairo/mediamtx-mcp:latest
+    container_name: mmtx-mcp
+    # MCP server is stdio-based; by default we just build the image so
+    # users can `docker run` it on demand. Add it to a long-running service
+    # only if you've wired up the streamable HTTP transport.
+    profiles: [mcp]
+    networks: [mediamtx-net]
+    depends_on: [mediamtx]
+    environment:
+      MEDIAMTX_URL: http://mediamtx:9997
+      MEDIAMTX_MCP_ALLOW_KICK: 'false'
+    stdin_open: true
+    tty: true
+
+networks:
+  mediamtx-net:
+    driver: bridge
+
+volumes:
+  mediamtx-recordings:
