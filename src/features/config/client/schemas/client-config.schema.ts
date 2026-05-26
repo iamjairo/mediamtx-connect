@@ -6,6 +6,8 @@ export const ClientConfigSchema = z.object({
   id: z.coerce.number(),
   mediaMtxUrl: z.string().min(1),
   mediaMtxApiPort: z.coerce.number().gt(0),
+  mediaMtxApiUsername: z.string().nullable(),
+  mediaMtxApiPassword: z.string().nullable(),
   remoteMediaMtxUrl: z.string().nullable(),
   recordingsDirectory: z.string().min(1),
   screenshotsDirectory: z.string().min(1),

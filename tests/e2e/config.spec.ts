@@ -20,8 +20,10 @@ test.describe('Config Page', () => {
     const form = page.locator('form').first()
     await expect(form).toBeVisible({ timeout: 10000 })
     const inputs = form.locator('input')
-    // Form has 5 fields: mediaMtxUrl, mediaMtxApiPort, remoteMediaMtxUrl, recordingsDirectory, screenshotsDirectory
-    await expect(inputs).toHaveCount(5)
+    // Form has 7 fields: mediaMtxUrl, mediaMtxApiPort, mediaMtxApiUsername,
+    // mediaMtxApiPassword, remoteMediaMtxUrl, recordingsDirectory,
+    // screenshotsDirectory
+    await expect(inputs).toHaveCount(7)
   })
 
   test('should have a save/update button', async ({ page }) => {

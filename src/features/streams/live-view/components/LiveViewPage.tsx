@@ -9,7 +9,7 @@ import { AlertTriangle, Settings } from 'lucide-react'
 import Link from 'next/link'
 
 import { getAppConfig } from '@/features/config/client'
-import { Api } from '@/lib/MediaMTX/generated'
+import { getMediaMtxClient } from '@/lib/MediaMTX/client'
 import { RefreshButton } from '@/shared/components/feedback'
 import { GridLayout, PageLayout } from '@/shared/components/layout'
 import { Alert, AlertDescription, AlertTitle } from '@/shared/components/ui/alert'
@@ -40,20 +40,20 @@ export async function LiveViewPage() {
   let mediaMtxConfig: HttpResponse<GlobalConf, Error> | undefined
   let connectionError = false
 
-  const api = new Api({
-    baseUrl: `${config.mediaMtxUrl}:${config.mediaMtxApiPort}`,
-  })
+  const client = await getMediaMtxClient()
 
-  try {
-    paths = await api.v3.pathsList({}, { cache: 'no-store' })
-    mediaMtxConfig = await api.v3.configGlobalGet({ cache: 'no-store' })
+  if (client) {
+    try {
+      paths = await client.api.v3.pathsList({}, { cache: 'no-store' })
+      mediaMtxConfig = await client.api.v3.configGlobalGet({ cache: 'no-store' })
+    }
+    catch (error) {
+      connectionError = true
+      logger.error(`Error reaching MediaMTX at: ${client.baseUrl}`, error)
+    }
   }
-  catch (error) {
+  else {
     connectionError = true
-    logger.error(
-      `Error reaching MediaMTX at: ${config.mediaMtxUrl}:${config.mediaMtxApiPort}`,
-      error,
-    )
   }
 
   const remoteMediaMtxUrl = config.remoteMediaMtxUrl
