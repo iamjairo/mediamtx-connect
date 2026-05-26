@@ -15,6 +15,8 @@ model Config {
   id                   Int      @id @default(autoincrement())
   mediaMtxUrl          String   @default("http://mediamtx")
   mediaMtxApiPort      Int      @default(9997)
+  mediaMtxApiUsername  String?
+  mediaMtxApiPassword  String?
   remoteMediaMtxUrl    String?  @default("http://localhost")
   recordingsDirectory  String   @default("/recordings")
   screenshotsDirectory String   @default("/screenshots")

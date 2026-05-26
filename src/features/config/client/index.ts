@@ -1,5 +1,6 @@
 // Actions
 export { getAppConfig } from './actions/getAppConfig'
+export { testMediaMtxConnection } from './actions/testMediaMtxConnection'
 export { updateClientConfig } from './actions/updateClientConfig'
 
 // Components

@@ -19,6 +19,10 @@ export default async function RootLayout({
   children: React.ReactNode
 }) {
   const navItems = [
+    { name: 'Streams', location: '/' },
+    { name: 'Paths', location: '/streams/paths' },
+    { name: 'HLS Muxers', location: '/streams/hls-muxers' },
+    { name: 'Sessions', location: '/sessions' },
     { name: 'Recordings', location: '/recordings' },
     { name: 'Config', location: '/config' },
   ]

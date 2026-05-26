@@ -17,6 +17,10 @@ export default async function ConfigLayout({
       title: 'MediaMTX Global Config',
       href: '/config/mediamtx/global',
     },
+    {
+      title: 'Path Defaults',
+      href: '/config/path-defaults',
+    },
   ]
 
   return (

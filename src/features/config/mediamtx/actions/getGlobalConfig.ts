@@ -2,27 +2,21 @@
 
 import type { GlobalConf } from '@/lib/MediaMTX/generated'
 
-import { Api } from '@/lib/MediaMTX/generated'
+import { getMediaMtxClient } from '@/lib/MediaMTX/client'
 import { logger } from '@/shared/utils'
 
-import { getAppConfig } from '../../client'
-
 export async function getGlobalConfig(): Promise<GlobalConf | undefined> {
-  const config = await getAppConfig()
-  if (!config) {
+  const client = await getMediaMtxClient()
+  if (!client) {
     return undefined
   }
 
-  const api = new Api({
-    baseUrl: `${config.mediaMtxUrl}:${config.mediaMtxApiPort}`,
-  })
-
   try {
-    const mediaMtxConfig = await api.v3.configGlobalGet({ cache: 'no-store' })
+    const mediaMtxConfig = await client.api.v3.configGlobalGet({ cache: 'no-store' })
     return mediaMtxConfig?.data
   }
   catch {
-    logger.error(`Error reaching MediaMTX at: ${config.mediaMtxUrl}`)
+    logger.error(`Error reaching MediaMTX at: ${client.baseUrl}`)
     return undefined
   }
 }

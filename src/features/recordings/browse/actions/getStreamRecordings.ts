@@ -29,8 +29,8 @@ export async function getStreamRecordings({
   const recordingsRoot = path.resolve(config.recordingsDirectory)
   const streamDir = path.resolve(recordingsRoot, streamName)
   if (
-    streamDir !== recordingsRoot &&
-    !streamDir.startsWith(recordingsRoot + path.sep)
+    streamDir !== recordingsRoot
+    && !streamDir.startsWith(recordingsRoot + path.sep)
   ) {
     logger.warn('Rejected invalid streamName path traversal attempt', {
       streamName,
@@ -51,8 +51,8 @@ export async function getStreamRecordings({
     recordingFiles.map(async (r) => {
       const recordingPath = path.resolve(streamDir, r)
       if (
-        recordingPath !== streamDir &&
-        !recordingPath.startsWith(streamDir + path.sep)
+        recordingPath !== streamDir
+        && !recordingPath.startsWith(streamDir + path.sep)
       ) {
         logger.warn('Rejected invalid recording path traversal attempt', {
           streamName,
