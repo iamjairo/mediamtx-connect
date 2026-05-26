@@ -27,6 +27,8 @@ export default antfu(
       // Subprojects with their own tsconfig + lint setup
       'mcp-server/**',
       'packages/**',
+      'apps/**',
+      'deploy/**',
     ],
   },
   {

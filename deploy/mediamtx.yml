@@ -1,0 +1,34 @@
+# Minimal MediaMTX config for the composed deployment.
+# Override / extend for production use.
+
+logLevel: info
+logDestinations: [stdout]
+
+# Enable the control API used by the dashboard + MCP server.
+api: yes
+apiAddress: :9997
+
+# Required so the dashboard's browser-side requests aren't blocked by CORS.
+# Replace * with your actual host origin in production.
+
+# Protocols
+rtsp: yes
+rtspAddress: :8554
+rtmp: yes
+rtmpAddress: :1935
+hls: yes
+hlsAddress: :8888
+hlsAlwaysRemux: no
+webrtc: yes
+webrtcAddress: :8889
+webrtcLocalUDPAddress: :8189
+srt: yes
+srtAddress: :8890
+
+# Default record path (volume-mounted by the compose file)
+record: no
+recordPath: /recordings/%path/%Y-%m-%d_%H-%M-%S-%f
+recordFormat: fmp4
+
+paths:
+  all_others:

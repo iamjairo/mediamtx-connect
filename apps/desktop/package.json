@@ -1,0 +1,32 @@
+{
+  "name": "@iamjairo/mediamtx-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Native desktop wrapper for the MediaMTX dashboard. Tauri 2 shell + the @iamjairo/mediamtx-dashboard package as the UI. Builds for linux/darwin/windows on x64 + arm64.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "build:bundles": "tauri build --bundles all",
+    "tauri": "tauri",
+    "ui:dev": "vite",
+    "ui:build": "vite build"
+  },
+  "dependencies": {
+    "@iamjairo/mediamtx-dashboard": "file:../../packages/dashboard-vite",
+    "@tauri-apps/api": "^2.1.1",
+    "@tauri-apps/plugin-store": "^2.2.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.1.1"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.1.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.7"
+  }
+}
