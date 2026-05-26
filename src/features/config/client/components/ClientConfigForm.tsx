@@ -46,12 +46,12 @@ export function ClientConfigForm({
     const updated = await updateClientConfig({ clientConfig: values })
 
     if (updated) {
-      toast({ title: 'Updated Client Config' })
+      toast({ title: 'Updated Global Config' })
     }
     else {
       toast({
         variant: 'destructive',
-        title: 'There was an issue updating the Client Config',
+        title: 'There was an issue updating the Global Config',
         description: 'Please double check your form values.',
       })
     }
